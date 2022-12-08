@@ -476,7 +476,7 @@ button {
 }
 
 .icon-md {
-    font-size: 30px!important;
+    font-size: 15px!important;
 }
 
 .icon-lg {
@@ -780,7 +780,7 @@ h4 {
 
 .btn-atomic-tangerine {
     background: #F3976C;
-    color: #FFFFFF!important;
+    color: #121212!important;
 }
 
 .btn-atomic-tangerine:hover {
@@ -1040,3 +1040,4 @@ h4 {
         text-align: center;
     }
 }
+
