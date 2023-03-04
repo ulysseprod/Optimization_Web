@@ -2,7 +2,6 @@ require('dotenv').config()
 const express=require("express");
 const app=express();
 const cors= require("cors");
-const bodyParser=require("body-parser");
 const port=3000;
 const multer=require("multer");
 const path= require("path");
@@ -28,11 +27,11 @@ const { dirname } = require('path');
 //middleware
 app.use(cors());
 app.use(express.json());
-app.use(bodyParser.json());
 //routes
 
 app.post("/api/auth/signup",createUser);
 app.post("/api/auth/login",logUser);
+
 app.get("/api/sauces",authentifyUser,getSauces);
 app.post("/api/sauces",authentifyUser,upload.single("image"),createSauce);
 app.get("/api/sauces/:id",authentifyUser,getSauceById);

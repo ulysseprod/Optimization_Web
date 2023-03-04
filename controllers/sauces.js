@@ -1,5 +1,6 @@
 const jwt= require("jsonwebtoken");
 const mongoose= require("mongoose");
+const {unlink}= require("fs")
 const SauceSchema= new mongoose.Schema({
     userId : String,
     name : String ,
@@ -42,14 +43,22 @@ async function getSauceById(req,res){
     }
 }
 
-async function deleteSauce(req,res){
-    try{
-        const {id}=req.params;
-        const product= await Product.findByIdAndDelete(id);
-        res.send({message:product})
-    } catch (error){
-        res.status(500).send({message:error})
-    }
+function deleteSauce(req,res){
+   const {id}= req.params;
+
+   Product.findByIdAndDelete(id)
+    .then(deleteImage)
+    .then(product => res.send({message: product}))
+    .catch(err=> res.status(500).send({message:err}))
+}
+
+function deleteImage(product){
+    const imageUrl= product.imageUrl;
+    const fileToDelete= imageUrl.split("/").at(-1);
+    unlink(`images/${fileToDelete}`,err => {
+        if(err) throw err;
+    })
+    return product;
 }
 
 function modifySauce(req,res){
