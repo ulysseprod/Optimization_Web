@@ -54,9 +54,10 @@ async function deleteSauce(req,res){
 
 function modifySauce(req,res){
     const {params: {id}}=req;
+    const{userId}=req.body;
     const ModifiedImage= req.file !=null;
     const payload= makePayload(ModifiedImage,req);
-
+    if(id!==userId) return;
     Product.findByIdAndUpdate(id,payload)
         .then((dbResponse) => sendClientResponse(dbResponse,res))
         .catch((err)=> console.error("Problem Updating",err));
@@ -124,6 +125,7 @@ function likeOrDislikeSauce(req,res){
 function updateVote(product,like,userId){
     if(like===1) incrementLikes(product,userId);
     if(like===-1) incrementDislikes(product,userId);
+    if(like===0) resetVote(product,userId);
     return product.save();
 }
 
@@ -139,6 +141,24 @@ function incrementDislikes(product,userId){
     if(usersDisliked.includes(userId)) return
     usersDisliked.push(userId);
     product.dislikes++;
+}
+
+function resetVote(product,userId){
+    const {usersLiked,usersDisliked}=product;
+    if(usersLiked.includes(userId)){
+        usersLiked.pull(userId);
+        product.likes--;
+        if(product.likes<0){
+            product.likes=0;
+        }
+    }
+    else if(usersDisliked.includes(userId)){
+        usersDisliked.pull(userId);
+        product.dislikes--;
+        if(product.dislikes<0){
+            product.dislikes=0;
+        }
+    }
 }
 
 
