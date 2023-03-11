@@ -45,11 +45,18 @@ async function getSauceById(req,res){
 
 function deleteSauce(req,res){
    const {id}= req.params;
+   const authid=req.body.userId;
+   const product=Product.findById(id);
 
-   Product.findByIdAndDelete(id)
-    .then(deleteImage)
-    .then(product => res.send({message: product}))
-    .catch(err=> res.status(500).send({message:err}))
+   if(product.userId==authid){
+        Product.findByIdAndDelete(id)
+            .then(deleteImage)
+            .then(product => res.send({message: product}))
+            .catch(err=> res.status(500).send({message:err}))
+}else{
+    return res.status(403).send({message:"Vous n'etes pas l'auteur de cette sauce"});
+}
+
 }
 
 function deleteImage(product){
@@ -63,13 +70,19 @@ function deleteImage(product){
 
 function modifySauce(req,res){
     const {params: {id}}=req;
-    const{userId}=req.body;
     const ModifiedImage= req.file !=null;
+    const authid=req.body.userId;
+    const product=Product.findById(id);
     const payload= makePayload(ModifiedImage,req);
-    if(id!==userId) return;
-    Product.findByIdAndUpdate(id,payload)
+    if(product.userId==authid){
+        Product.findByIdAndUpdate(id,payload)
         .then((dbResponse) => sendClientResponse(dbResponse,res))
         .catch((err)=> console.error("Problem Updating",err));
+    }else{
+        return res.status(403).send({message:"Vous n'etes pas l'auteur de cette sauce"});
+    }
+    
+   
 }
 
 function makePayload(ModifiedImage,req){
@@ -169,6 +182,5 @@ function resetVote(product,userId){
         }
     }
 }
-
 
 module.exports={getSauces,createSauce,authentifyUser,getSauceById,deleteSauce,modifySauce,likeOrDislikeSauce};
