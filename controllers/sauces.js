@@ -1,32 +1,34 @@
 const jwt= require("jsonwebtoken");
 const mongoose= require("mongoose");
-const {unlink}= require("fs")
-const SauceSchema= new mongoose.Schema({
-    userId : String,
-    name : String ,
-    manufacturer : String ,
-    description : String ,
-    mainPepper : String,
-    imageUrl : String,
-    heat : Number,
-    likes : Number,
-    dislikes : Number,
-    usersLiked : [String],
-    usersDisliked : [String]
-})
+const {unlink}= require("fs");
 
-const Product= mongoose.model("product", SauceSchema);
+const Product= require("../models/Saucemodel");
 
-function authentifyUser(req,res,next){
-    const authorizHeader=req.header('authorization');
-    if(authorizHeader==null) return res.status(403).send({message:'invalid'});
-    const token=authorizHeader.split(" ")[1];
-    if(token==null) return res.status(403).send({message:'Token cannot be null'});
+function createSauce(req,res){
+    const body= req.body;
+    const file= req.file;
+    const {filename}=file;
+    const sauce= JSON.parse(body.sauce);
+    const {name,manufacturer,description,mainPepper,heat,userId}=sauce;
 
-    jwt.verify(token, process.env.JWT_PASSWORD, (err,decoded)=>{
-        if(err) return res.status(403).send({message:"token cannot be null"+err})
-        next();
+    const product= new Product({
+        userId,
+        name,
+        manufacturer,
+        description,
+        mainPepper,
+        imageUrl:makeImageAccessible(req,filename),
+        heat,
+        likes:0,
+        dislikes:0,
+        usersLiked:[],
+        userDisliked:[]
     })
+    product.save().then((message)=>{
+        res.status(201).send({message:message})
+        return console.log("produit enregistré", message);
+    });
+    console.log({name,manufacturer});
 }
 
 function getSauces(req,res){
@@ -71,19 +73,14 @@ function deleteImage(product){
 function modifySauce(req,res){
     const {params: {id}}=req;
     const ModifiedImage= req.file !=null;
-    const authid=req.body.userId;
-    const product=Product.findById(id);
     const payload= makePayload(ModifiedImage,req);
-    if(product.userId==authid){
-        Product.findByIdAndUpdate(id,payload)
-        .then((dbResponse) => sendClientResponse(dbResponse,res))
-        .catch((err)=> console.error("Problem Updating",err));
-    }else{
-        return res.status(403).send({message:"Vous n'etes pas l'auteur de cette sauce"});
+
+    Product.findByIdAndUpdate(id,payload)
+     .then((dbResponse) => sendClientResponse(dbResponse,res))
+     .catch((err)=> console.error("Problem Updating",err));
     }
     
    
-}
 
 function makePayload(ModifiedImage,req){
     if(!ModifiedImage) return req.body;
@@ -92,41 +89,16 @@ function makePayload(ModifiedImage,req){
     return payload;
 }
 
+function makeImageAccessible(req,filename){
+    return req.protocol + '://' + req.get('host') + "/images/"+filename;
+}
+
+
 function sendClientResponse(dbProduct,res){
    if(dbProduct==null) {
         res.status(404).send({message:"Object is not in the database"});
    }
    res.status(200).send({message:"update is successful"});
-}
-function makeImageAccessible(req,filename){
-    return req.protocol + '://' + req.get('host') + "/images/"+filename;
-}
-
-function createSauce(req,res){
-    const body= req.body;
-    const file= req.file;
-    const {filename}=file;
-    const sauce= JSON.parse(body.sauce);
-    const {name,manufacturer,description,mainPepper,heat,userId}=sauce;
-
-    const product= new Product({
-        userId,
-        name,
-        manufacturer,
-        description,
-        mainPepper,
-        imageUrl:makeImageAccessible(req,filename),
-        heat,
-        likes:0,
-        dislikes:0,
-        usersLiked:[],
-        userDisliked:[]
-    })
-    product.save().then((message)=>{
-        res.status(201).send({message:message})
-        return console.log("produit enregistré", message);
-    });
-    console.log({name,manufacturer});
 }
 
 function getSauce(req){
@@ -183,4 +155,4 @@ function resetVote(product,userId){
     }
 }
 
-module.exports={getSauces,createSauce,authentifyUser,getSauceById,deleteSauce,modifySauce,likeOrDislikeSauce};
+module.exports={getSauces,createSauce,getSauceById,deleteSauce,modifySauce,likeOrDislikeSauce};

@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
 
-const uri = "mongodb+srv://ulysse_prod:Druide.97@prodcluster.d0ccysf.mongodb.net/?retryWrites=true&w=majority";
-
+const uri = `mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@prodcluster.d0ccysf.mongodb.net/?retryWrites=true&w=majority`
 mongoose.connect(uri)
 .then(()=>console.log("Connected to mongo"))
 .catch("Error connecting to mongo:")

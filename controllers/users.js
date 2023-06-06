@@ -1,4 +1,4 @@
-const {User}=require("../mongo");
+const {User}=require("../models/Usermodel");
 const bcrypt=require("bcrypt");
 const jwt=require("jsonwebtoken");
 
@@ -16,9 +16,15 @@ async function createUser(req,res){
     }
 }
 
+async function hashPassword(password){
+  const saltrounds=10;
+  return bcrypt.hash(password, saltrounds);
+    // Store hash in your password DB.;
+}
+
+
 async function logUser(req,res){
-  const email=req.body.email;
-  const password=req.body.password;
+  const {email,password}=req.body;
   const user= await User.findOne({email:email})
   console.log('user:',user)
   const isPasswordValid= await bcrypt.compare(password,user.password);
@@ -30,12 +36,6 @@ async function logUser(req,res){
     res.status(201).send({userId:user._id, token:token});
   }
  
-}
-
-async function hashPassword(password){
-  const saltrounds=10;
-  return bcrypt.hash(password, saltrounds);
-    // Store hash in your password DB.;
 }
 
 function createToken(email){
